@@ -1,8 +1,8 @@
 package com.apis.productdiscountapi.service;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;

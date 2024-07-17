@@ -1,9 +1,9 @@
 package com.apis.productdiscountapi.model;
 
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -27,4 +27,5 @@ public class CartItem {
 
     public BigDecimal getTotalPrice() {
         return product.getPrice().multiply(BigDecimal.valueOf(quantity));
-    }}
+    }
+}
