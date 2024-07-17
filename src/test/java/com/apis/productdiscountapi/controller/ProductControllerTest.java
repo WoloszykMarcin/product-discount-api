@@ -1,6 +1,7 @@
 package com.apis.productdiscountapi.controller;
 
-import com.apis.productdiscountapi.model.Product;
+import com.apis.productdiscountapi.command.CreateProductCommand;
+import com.apis.productdiscountapi.dto.ProductDTO;
 import com.apis.productdiscountapi.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -32,13 +33,14 @@ class ProductControllerTest {
 
     @Test
     void createProduct() throws Exception {
-        Product product = new Product();
-        product.setName("Test Product");
-        product.setPrice(BigDecimal.valueOf(100.00));
+        ProductDTO productDTO = ProductDTO.builder()
+                .name("Test Product")
+                .price(BigDecimal.valueOf(100.00))
+                .build();
 
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(product)))
+                        .content(objectMapper.writeValueAsString(productDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("Test Product"))
@@ -55,10 +57,9 @@ class ProductControllerTest {
 
     @Test
     void getProductById() throws Exception {
-        Product product = new Product();
-        product.setName("Test Product");
-        product.setPrice(BigDecimal.valueOf(100.00));
-        Product createdProduct = productService.addProduct(product);
+        CreateProductCommand command = new CreateProductCommand("Test Product", BigDecimal.valueOf(100.00));
+
+        ProductDTO createdProduct = productService.addProduct(command);
 
         mockMvc.perform(get("/api/products/" + createdProduct.getId())
                         .contentType(MediaType.APPLICATION_JSON))

@@ -1,7 +1,8 @@
 package com.apis.productdiscountapi.controller;
 
+import com.apis.productdiscountapi.command.CreateProductCommand;
 import com.apis.productdiscountapi.dto.CartDTO;
-import com.apis.productdiscountapi.model.Product;
+import com.apis.productdiscountapi.dto.ProductDTO;
 import com.apis.productdiscountapi.service.CartService;
 import com.apis.productdiscountapi.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,15 +31,13 @@ class CartControllerTest {
     @Autowired
     private ProductService productService;
 
-    private Product product;
+    private ProductDTO product;
     private CartDTO cart;
 
     @BeforeEach
     void setup() {
-        product = new Product();
-        product.setName("Test Product");
-        product.setPrice(BigDecimal.valueOf(100.00));
-        product = productService.addProduct(product);
+        CreateProductCommand command = new CreateProductCommand("Test Product", BigDecimal.valueOf(100.00));
+        product = productService.addProduct(command);
 
         cart = cartService.createCart();
     }

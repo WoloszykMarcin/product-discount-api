@@ -1,5 +1,7 @@
 package com.apis.productdiscountapi.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,6 +13,8 @@ import java.util.List;
 @ConfigurationProperties(prefix = "discount")
 public class DiscountProperties {
 
+    private static final Logger logger = LoggerFactory.getLogger(DiscountProperties.class);
+
     private List<Integer> amountThresholds;
     private List<BigDecimal> amountValues;
     private List<Integer> percentageThresholds;
@@ -18,10 +22,10 @@ public class DiscountProperties {
 
     @PostConstruct
     public void init() {
-        System.out.println("Amount Thresholds: " + amountThresholds);
-        System.out.println("Amount Values: " + amountValues);
-        System.out.println("Percentage Thresholds: " + percentageThresholds);
-        System.out.println("Percentage Values: " + percentageValues);
+        logger.info("Amount Thresholds: {}", amountThresholds);
+        logger.info("Amount Values: {}", amountValues);
+        logger.info("Percentage Thresholds: {}", percentageThresholds);
+        logger.info("Percentage Values: {}", percentageValues);
     }
 
     public List<Integer> getAmountThresholds() {
