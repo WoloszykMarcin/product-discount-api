@@ -20,23 +20,30 @@ public class Cart {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CartItem> items = new ArrayList<>();
 
+    @Version
+    private int version;
+
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
+    private int totalQuantity = 0;
+
     public void addItem(CartItem item) {
-        item.setCart(this);
-        this.items.add(item);
-        updateTotalPrice();
+        items.add(item);
+        recalculateCart();
     }
 
     public void removeItem(CartItem item) {
-        this.items.remove(item);
-        item.setCart(null);
-        updateTotalPrice();
+        items.remove(item);
+        recalculateCart();
     }
 
-    private void updateTotalPrice() {
-        this.totalPrice = items.stream()
+    private void recalculateCart() {
+        totalPrice = items.stream()
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        totalQuantity = items.stream()
+                .mapToInt(CartItem::getQuantity)
+                .sum();
     }
 }

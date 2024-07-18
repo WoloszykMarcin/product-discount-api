@@ -2,11 +2,11 @@ package com.apis.productdiscountapi.controller;
 
 import com.apis.productdiscountapi.command.CreateProductCommand;
 import com.apis.productdiscountapi.dto.ProductDTO;
-import com.apis.productdiscountapi.model.Product;
 import com.apis.productdiscountapi.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +21,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDTO> addProduct(@RequestBody CreateProductCommand productCommand) {
+    public ResponseEntity<ProductDTO> addProduct(@RequestBody @Valid CreateProductCommand productCommand) {
         ProductDTO createdProduct = productService.addProduct(productCommand);
         return ResponseEntity.ok(createdProduct);
     }

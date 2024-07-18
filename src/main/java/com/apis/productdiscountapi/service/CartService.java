@@ -1,15 +1,14 @@
 package com.apis.productdiscountapi.service;
 
 import com.apis.productdiscountapi.dto.CartDTO;
+import com.apis.productdiscountapi.exception.CartNotFoundException;
 import com.apis.productdiscountapi.model.Cart;
 import com.apis.productdiscountapi.model.CartItem;
 import com.apis.productdiscountapi.model.Product;
 import com.apis.productdiscountapi.repository.CartRepository;
 import com.apis.productdiscountapi.repository.ProductRepository;
+import org.hibernate.StaleObjectStateException;
 import org.modelmapper.ModelMapper;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,56 +45,62 @@ public class CartService {
         return cartRepository.findByIdWithItems(id).map(cart -> modelMapper.map(cart, CartDTO.class));
     }
 
-    @Retryable(
-            value = {DataIntegrityViolationException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 1000)
-    )
     @Transactional
     public CartDTO addProductToCart(UUID cartId, UUID productId, int quantity) {
         Cart cart = cartRepository.findByIdWithItems(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
+                .orElseThrow(() -> new CartNotFoundException(cartId));
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
-        CartItem item = cart.getItems().stream()
+        Optional<CartItem> existingItemOpt = cart.getItems().stream()
                 .filter(i -> i.getProduct().getId().equals(productId))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
 
-        if (item != null) {
-            item.setQuantity(item.getQuantity() + quantity);
-        } else {
-            item = new CartItem();
-            item.setCart(cart);
-            item.setProduct(product);
-            item.setQuantity(quantity);
-            cart.addItem(item);
+        Cart finalCart = cart;
+        existingItemOpt.ifPresentOrElse(
+                item -> item.setQuantity(item.getQuantity() + quantity),
+                () -> {
+                    CartItem newItem = new CartItem();
+                    newItem.setCart(finalCart);
+                    newItem.setProduct(product);
+                    newItem.setQuantity(quantity);
+                    finalCart.addItem(newItem);
+                }
+        );
+
+        try {
+            cart = cartRepository.save(cart);
+        } catch (StaleObjectStateException e) {
+            throw new IllegalArgumentException("The cart is being modified by another user, please try again!", e);
         }
 
-        cartRepository.save(cart);
         return modelMapper.map(cart, CartDTO.class);
     }
 
-    @Retryable(
-            value = {DataIntegrityViolationException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 1000)
-    )
+
+
     @Transactional
     public CartDTO removeProductFromCart(UUID cartId, UUID productId) {
         Cart cart = cartRepository.findByIdWithItems(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
+                .orElseThrow(() -> new CartNotFoundException(cartId));
+
         CartItem item = cart.getItems().stream()
                 .filter(i -> i.getProduct().getId().equals(productId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Product not found in cart"));
 
         cart.removeItem(item);
-        cartRepository.save(cart);
+
+        try {
+            cart = cartRepository.save(cart);
+        } catch (StaleObjectStateException e) {
+            throw new IllegalArgumentException("The cart is being modified by another user, please try again!", e);
+        }
 
         return modelMapper.map(cart, CartDTO.class);
     }
+
+
 
     @Transactional(readOnly = true)
     public BigDecimal getTotalPrice(UUID cartId, String discountType) {
@@ -106,3 +111,4 @@ public class CartService {
         return discountService.applyDiscount(totalPrice, totalQuantity, discountType);
     }
 }
+

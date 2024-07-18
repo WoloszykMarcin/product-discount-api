@@ -28,6 +28,9 @@ public class CartItem {
 
     private int quantity;
 
+    @Version
+    private int version;
+
     public BigDecimal getTotalPrice() {
         return product.getPrice().multiply(BigDecimal.valueOf(quantity));
     }
