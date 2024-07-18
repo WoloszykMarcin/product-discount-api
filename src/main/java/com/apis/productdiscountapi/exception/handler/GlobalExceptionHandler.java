@@ -1,6 +1,8 @@
 package com.apis.productdiscountapi.exception.handler;
 
+import com.apis.productdiscountapi.exception.CartNotFoundException;
 import com.apis.productdiscountapi.exception.ProductAlreadyExistsException;
+import com.apis.productdiscountapi.exception.ProductNotFoundException;
 import com.apis.productdiscountapi.exception.constraints.ConstraintErrorHandler;
 import lombok.Builder;
 import lombok.Value;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     private Map<String, ConstraintErrorHandler> constraintErrorMapper;
+
     public GlobalExceptionHandler(Set<ConstraintErrorHandler> handlers) {
         this.constraintErrorMapper = handlers.stream().collect(Collectors.toMap(ConstraintErrorHandler::getConstraintName, Function.identity()));
     }
@@ -33,6 +36,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleConstraintViolationException(org.hibernate.exception.ConstraintViolationException exc) {
         String constraintName = exc.getConstraintName().substring(8, exc.getConstraintName().indexOf(" ") - 8);
         return ResponseEntity.badRequest().body(constraintErrorMapper.get(constraintName).mapToErrorDto());
+    }
+
+    @ExceptionHandler(CartNotFoundException.class)
+    public ResponseEntity<String> handleFigureNotFoundException(CartNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<String> handleFigureNotFoundException(ProductNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

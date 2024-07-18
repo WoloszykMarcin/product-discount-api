@@ -2,6 +2,7 @@ package com.apis.productdiscountapi.service;
 
 import com.apis.productdiscountapi.dto.CartDTO;
 import com.apis.productdiscountapi.exception.CartNotFoundException;
+import com.apis.productdiscountapi.exception.ProductNotFoundException;
 import com.apis.productdiscountapi.model.Cart;
 import com.apis.productdiscountapi.model.CartItem;
 import com.apis.productdiscountapi.model.Product;
@@ -50,7 +51,7 @@ public class CartService {
         Cart cart = cartRepository.findByIdWithItems(cartId)
                 .orElseThrow(() -> new CartNotFoundException(cartId));
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
         Optional<CartItem> existingItemOpt = cart.getItems().stream()
                 .filter(i -> i.getProduct().getId().equals(productId))
@@ -78,7 +79,6 @@ public class CartService {
     }
 
 
-
     @Transactional
     public CartDTO removeProductFromCart(UUID cartId, UUID productId) {
         Cart cart = cartRepository.findByIdWithItems(cartId)
@@ -87,7 +87,7 @@ public class CartService {
         CartItem item = cart.getItems().stream()
                 .filter(i -> i.getProduct().getId().equals(productId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Product not found in cart"));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
         cart.removeItem(item);
 
@@ -101,11 +101,10 @@ public class CartService {
     }
 
 
-
     @Transactional(readOnly = true)
     public BigDecimal getTotalPrice(UUID cartId, String discountType) {
         Cart cart = cartRepository.findByIdWithItems(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
+                .orElseThrow(() -> new CartNotFoundException(cartId));
         BigDecimal totalPrice = cart.getTotalPrice();
         int totalQuantity = cart.getItems().stream().mapToInt(CartItem::getQuantity).sum();
         return discountService.applyDiscount(totalPrice, totalQuantity, discountType);

@@ -1,6 +1,7 @@
 package com.apis.productdiscountapi.controller;
 
 import com.apis.productdiscountapi.dto.CartDTO;
+import com.apis.productdiscountapi.exception.CartNotFoundException;
 import com.apis.productdiscountapi.service.CartService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class CartController {
     @GetMapping("/{id}")
     public CartDTO getCart(@PathVariable UUID id) {
         return cartService.getCartWithItems(id)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new CartNotFoundException(id));
     }
 
     @PostMapping("/{cartId}/products")
