@@ -38,7 +38,6 @@ class CartControllerTest {
     void setup() {
         CreateProductCommand command = new CreateProductCommand("Test Product", BigDecimal.valueOf(100.00));
         product = productService.addProduct(command);
-
         cart = cartService.createCart();
     }
 
